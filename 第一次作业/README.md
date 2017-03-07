@@ -25,7 +25,7 @@ export SPARK_EXECUTOR_URI=/home/liuxinyuan/spark-2.1.0-bin-hadoop2.7.tgz
   /home/liuxinyuan/spark-2.1.0-bin-hadoop2.7/test.txt
 ```
 
-运行结果：
+##运行结果：
 
 1 CPU核：2.832S
 
@@ -38,3 +38,6 @@ export SPARK_EXECUTOR_URI=/home/liuxinyuan/spark-2.1.0-bin-hadoop2.7.tgz
 4 CPU核：4.098S
 
 ![image](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第一次作业/Snapshot/Screenshot%20from%202017-03-07%2006-01-57.png)
+
+使用更多的CPU核，所耗时间反而上升。其原因应该在于多核之间的通信带来较大Overhead。
+
