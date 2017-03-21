@@ -155,3 +155,5 @@ Mesos默认的资源调度算法是HierarchicalDRF算法。DRF算法全称为Dom
 ## 写一个完成简单工作的框架
 
 我使用了国内豆瓣公司的pymesos包，参考了pymesos包中的example文件。
+
+executor.py 和 scheduler.py 分别为executor模块和scheduler模块。目前使用这个框架完成了一个简单的WordCount程序。目前这一框架还存在一些不足，例如通用性不好，任务和数据需要手动分割等等，在之后可以考虑进行改进。
