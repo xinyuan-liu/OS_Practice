@@ -3,6 +3,8 @@
 
 在本地安装docker，运行docker info结果：
 
+![](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第三次作业/pic1.png)
+
 ## docker基本命令
 
 ### docker run
@@ -154,6 +156,8 @@ docker network 命令下有6个子命令，分别是：
  
  在宿主机成功访问nginx服务器。
  
+![](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第三次作业/pic2.png)
+
 ## Docker的网络模式
 
 ### Bridge模式
@@ -339,8 +343,12 @@ Try<Subprocess> s = subprocess(
 			driver.launchTasks(offer.id, [task], filters)
 ```
 
+代码见：[framework.py](https://github.com/xinyuan-liu/OS_Practice/blob/master/第三次作业/framework.py)
+
 为支持Docker，需要在运行Agent时加入`--containerizers=docker,mesos --image_providers=docker --isolation=docker/runtime`命令行参数。
 
 由于我的燕云服务器一直用不了，所以这次作业还是在本地完成的，也就没有把nginx一直架到公网IP上。
 
 运行结果：
+
+![](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第三次作业/pic3.png)
