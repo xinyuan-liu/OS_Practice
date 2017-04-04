@@ -1,6 +1,8 @@
 # 第三次作业
 ## 安装配置Docker
 
+在本地安装docker，运行docker info结果：
+
 ## docker基本命令
 
 ### docker run
@@ -148,7 +150,7 @@ docker network 命令下有6个子命令，分别是：
  sudo docker network connect network_bridge nginx   #将容器连接入网络
  ```
  
- 成功将容器加入自定义的bridge网络，IP地址为172.17.0.2。
+ 成功将容器加入自定义的bridge网络，IP地址为172.18.0.2。
  
  在宿主机成功访问nginx服务器。
  
@@ -295,3 +297,50 @@ Try<Subprocess> s = subprocess(
       environment);
 ```
 
+## Framework
+
+和上次作业一样，也使用了pymesos的包。
+
+与上次作业不同的是，使用Docker作为容器，framework的executor部分不需要自己完成，使用mesos提供的Docker的executor即可。
+
+关键代码：
+
+```Python
+			#设定DockerInfo
+			DockerInfo = Dict()
+			DockerInfo.image = 'ubuntu_nginx2'
+			DockerInfo.network = 'HOST'
+
+			#设定ContainerInfo
+			ContainerInfo = Dict()
+			ContainerInfo.type = 'DOCKER'
+			ContainerInfo.docker = DockerInfo
+
+			#设定CommandInfo
+			CommandInfo = Dict()
+			CommandInfo.shell = False
+			CommandInfo.value = 'nginx'
+			CommandInfo.arguments = ['-g', "'daemon off;'"]
+
+			#设定task信息
+			task = Dict()
+			task_id = str(uuid.uuid4())
+			task.task_id.value = task_id
+			task.agent_id.value = offer.agent_id.value
+			task.name = 'nginx'
+			task.container = ContainerInfo
+			task.command = CommandInfo
+
+			task.resources = [
+				dict(name='cpus', type='SCALAR', scalar={'value': TASK_CPU}),
+				dict(name='mem', type='SCALAR', scalar={'value': TASK_MEM}),
+			]
+			#启动Task
+			driver.launchTasks(offer.id, [task], filters)
+```
+
+为支持Docker，需要在运行Agent时加入`--containerizers=docker,mesos --image_providers=docker --isolation=docker/runtime`命令行参数。
+
+由于我的燕云服务器一直用不了，所以这次作业还是在本地完成的，也就没有把nginx一直架到公网IP上。
+
+运行结果：
