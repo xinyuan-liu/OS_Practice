@@ -206,3 +206,92 @@ Docker的Overlay模式使用docker内置的swarm来管理结点。
 
 ### Run函数
 
+ 1. 检查containerInfo中是否有Docker
+```Cpp
+  if (!containerInfo.has_docker()) {
+    return Failure("No docker info found in container info");
+  }
+```
+ 2. 构建命令参数
+```Cpp
+  vector<string> argv;
+  argv.push_back(path);
+  argv.push_back("-H");
+  argv.push_back(socket);
+  argv.push_back("run");
+
+  if (dockerInfo.privileged()) {
+    argv.push_back("--privileged");
+  }
+```
+ 3. 检查资源信息，设置命令行参数。
+```Cpp
+  if (resources.isSome()) {
+    // TODO(yifan): Support other resources (e.g. disk).
+    Option<double> cpus = resources.get().cpus();
+    if (cpus.isSome()) {
+      uint64_t cpuShare =
+        std::max((uint64_t) (CPU_SHARES_PER_CPU * cpus.get()), MIN_CPU_SHARES);
+      argv.push_back("--cpu-shares");
+      argv.push_back(stringify(cpuShare));
+    }
+
+    Option<Bytes> mem = resources.get().mem();
+    if (mem.isSome()) {
+      Bytes memLimit = std::max(mem.get(), MIN_MEMORY);
+      argv.push_back("--memory");
+      argv.push_back(stringify(memLimit.bytes()));
+    }
+  }
+```
+ 4. 检查环境变量，设置命令行参数。
+ 5. 检查磁盘挂载信息，设置命令行参数。
+ 6. 配置网络、hostname、端口映射。
+ 7. 检查和设置外部设备参数。
+ 8. 检查和重写entrypoint。
+```Cpp
+if (commandInfo.shell()) {
+    argv.push_back("--entrypoint");
+    argv.push_back("/bin/sh");
+}
+```
+ 9. 指定容器名和镜像名。
+```Cpp
+argv.push_back("--name");
+argv.push_back(name);
+argv.push_back(image);
+```
+ 10. 添加容器运行的bash命令和参数。
+```Cpp
+  if (commandInfo.shell()) {
+    if (!commandInfo.has_value()) {
+      return Failure("Shell specified but no command value provided");
+    }
+
+    // Adding -c here because Docker cli only supports a single word
+    // for overriding entrypoint, so adding the -c flag for /bin/sh
+    // as part of the command.
+    argv.push_back("-c");
+    argv.push_back(commandInfo.value());
+  } else {
+    if (commandInfo.has_value()) {
+      argv.push_back(commandInfo.value());
+    }
+
+    foreach (const string& argument, commandInfo.arguments()) {
+      argv.push_back(argument);
+    }
+  }
+```
+ 11. 运行容器。
+```Cpp
+Try<Subprocess> s = subprocess(
+      path,
+      argv,
+      Subprocess::PATH("/dev/null"),
+      _stdout,
+      _stderr,
+      nullptr,
+      environment);
+```
+
