@@ -5,6 +5,8 @@ Linux内核通过Netfilter进行IP数据包处理，Netfilter为多种网络协�
 
 一个数据包被处理的具体流程为：
 
+![img1](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第五次作业/img1.png)
+
 数据包将触发挂在PREROUTING上的回调函数，如果该节点的规则允许通过，将进行网络地址转换。进行路由判断，如果是本机，则触发INPUT上的回调函数，通过过滤规则后，放行并进入本机上层协议栈；如果不是本机，则触发FORWARD上的回调函数，通过过滤规则和网络地址转换后，就进入POSTROUTING的处理阶段。由本机上层协议栈发出的数据包，需要经过路由判断下一个到达的网络节点，然后进行网络地址转换接着就和FORWARD过来的包一样，规则过滤，网络地址转换进入POSTROUTING阶段封包发出。
 
 iptables还提供了一些更抽象的表供用户使用：
@@ -62,7 +64,7 @@ Bridge 是一种以协议独立的方式将两个以太网段连接在一起的�
 
 Linux内核通过一个虚拟的网桥设备来实现桥接的，这个设备可以绑定若干个以太网接口设备，从而将它们桥接起来。如下图所示：
 
-[img]
+![img2](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第五次作业/img2.jpg)
 
 网桥设备 br0 绑定了 eth0 和 eth1。对于网络协议栈的上层来说，只看得到 br0，因为桥接是在数据链路层实现的，上层不需要关心桥接的细节。于是协议栈上层需要发送的报文被送到 br0，网桥设备的处理代码再来判断报文该被转发到 eth0 或是 eth1或者两者皆是；反过来，从 eth0 或从 eth1 接收到的报文被提交给网桥的处理代码，在这里会判断报文该转发、丢弃、或提交到协议栈上层。
 
@@ -211,4 +213,4 @@ CMD ["jupyter","notebook","--NotebookApp.token=","--ip=192.0.2.1","--port=8888"]
 configurable-http-proxy --default-target=http://192.0.2.100:8888 --port=8888
 ```
 
-最后启动scheduler.py，即可访问jupyter notebook。
+最后启动[scheduler.py](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第五次作业/scheduler.py)，即可访问jupyter notebook。
