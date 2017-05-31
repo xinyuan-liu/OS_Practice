@@ -40,24 +40,30 @@ Candidate（候选者）：负责选举投票，Raft刚启动时由一个节点�
 一个简单的例子：
 
 1. 任何一个服务器都可以成为一个候选者Candidate，它向其他服务器Follower发出要求选举自己的请求：
+
 ![img1](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft1.png)
 
 2. 其他服务器同意了，发出OK。
+
 ![img2](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft2.png)
 
 注意如果在这个过程中，有一个Follower宕机，没有收到请求选举的要求，因此候选者可以自己选自己，只要达到N/2 + 1 的大多数票，候选人还是可以成为Leader的。
 
 3. 这样这个候选者就成为了Leader领导人，它可以向Follower们发出指令，比如进行日志复制。
+
 ![img3](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft3.png)
 
 4. 以后通过心跳进行日志复制的通知
+
 ![img4](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft4.png)
 
 5. 如果一旦这个Leader当机崩溃了，那么Follower中有一个成为候选者，发出邀票选举。
+
 ![img5](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft5.png)
 
 6. Follower同意后，其成为Leader，继续承担日志复制等指导工作。
-!![img6](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft6.png)
+
+![img6](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft6.png)
 
 ## 简述Mesos的容错机制并验证
 
