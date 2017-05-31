@@ -212,13 +212,13 @@ while True:
         stats_json = stats_reponse.read().decode('utf-8')
         data = json.loads(stats_json)
         if data['state'] == 'StateLeader':
-            if leader_flag == 0: #如果是第一次成为leader，需要启动jupyter
+            if leader_flag == 0:
                 leader_flag = 1 
                 args = ['jupyter', 'notebook', '--NotebookApp.token=', '--ip=0.0.0.0', '--port=8888']
                 subprocess.Popen(args)
-                os.system('etcdctl set /leader/' + ip + ' ' + "1 --ttl 30")
-            elif data['state'] == 'StateFollower':
-                os.system('etcdctl set /follower/' + ip + ' ' + "1 --ttl 30")
+            os.system('etcdctl set /leader/' + ip + ' 1 --ttl 30')
+        elif data['state'] == 'StateFollower':
+            os.system('etcdctl set /follower/' + ip + ' 1 --ttl 30')
         update_host(n)
         time.sleep(10)
 ```
