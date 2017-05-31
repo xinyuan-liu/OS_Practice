@@ -40,18 +40,24 @@ Candidate（候选者）：负责选举投票，Raft刚启动时由一个节点�
 一个简单的例子：
 
 1. 任何一个服务器都可以成为一个候选者Candidate，它向其他服务器Follower发出要求选举自己的请求：
+![img1](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft1.png)
 
 2. 其他服务器同意了，发出OK。
+![img2](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft2.png)
 
 注意如果在这个过程中，有一个Follower宕机，没有收到请求选举的要求，因此候选者可以自己选自己，只要达到N/2 + 1 的大多数票，候选人还是可以成为Leader的。
 
 3. 这样这个候选者就成为了Leader领导人，它可以向Follower们发出指令，比如进行日志复制。
+![img3](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft3.png)
 
 4. 以后通过心跳进行日志复制的通知
+![img4](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft4.png)
 
 5. 如果一旦这个Leader当机崩溃了，那么Follower中有一个成为候选者，发出邀票选举。
+![img5](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft5.png)
 
 6. Follower同意后，其成为Leader，继续承担日志复制等指导工作。
+!![img6](https://raw.githubusercontent.com/xinyuan-liu/OS_Practice/master/第六次作业/img/raft6.png)
 
 ## 简述Mesos的容错机制并验证
 
@@ -139,4 +145,78 @@ WORKDIR /home/admin
 CMD ["/bin/bash"]
 ```
 
-### 配置etcd集群
+### 搭建 Calico 容器网络
+与执行上次作业相同的命令，创建一个容器网络
+```
+docker network create --driver calico --ipam-driver calico-ipam --subnet=192.0.2.0/24 calico
+```
+
+### GlusterFS分布式存储
+
+这一步的配置过程与第四次作业类似。具体过程不再重复。
+
+### 互相免密码ssh登录
+
+使用GlusterFS提供的分布式存储共享各个节点的私钥。需要执行命令：
+```
+ssh-keygen -f /home/admin/.ssh/id_rsa -t rsa && cat /home/admin/.ssh/id_rsa.pub >> /home/admin/gfsVolume/authorized_keys && /etc/init.d/ssh start
+```
+生成公私钥，并将公钥附加到分布式存储卷中。
+
+### 启动etcd
+
+使用Python的subprocess包。
+```
+def run_etcd(ip):
+    args = ['etcd', '--name', 'p'+ip[-1], '--initial-advertise-peer-urls', 'http://'+ip+':2380','--listen-peer-urls', 'http://'+ip+ ':2380','--listen-client-urls', 'http://'+ip+':2379,http://127.0.0.1:2379','--advertise-client-urls', 'http://'+ip+':2379','--initial-cluster-token', 'etcd-cluster-hw5','--initial-cluster', '192.0.2.100=http://192.0.2.100:2380,192.0.2.101=http://192.0.2.101:2380,192.0.2.102=http://192.0.2.102:2380' ,'--initial-cluster-state', 'new']
+    subprocess.Popen(args)
+```
+在容器启动时调用这个函数即可。
+
+### 更新host表
+```
+def update_host:
+    f=open("host","w")
+    err=0
+    for i in range(n):
+        flag=os.system('etcdctl get /leader/192.0.1.10' + str(i))
+        if flag==0:
+            f.write("192.0.1.10" + str(i)+" host0\n")
+            break
+    cnt=1
+    for i in range(0,n):
+        flag=os.system('etcdctl get /follower/192.0.1.10' + str(i))
+        if flag==0:
+            f.write("192.0.1.10" + str(i)+" host"+str(cnt)+"\n")
+            cnt=cnt+1
+    f.close()
+    os.system("mv host /etc/hosts")
+```
+
+### 守护程序
+```
+while True:
+    try:
+        stats_reponse = urllib.request.urlopen(stats_request)
+    except urllib.error.URLError as e:
+        print('[WARN] ', e.reason)
+        print('[WARN] Wating etcd...')
+
+    else:
+        stats_json = stats_reponse.read().decode('utf-8')
+        data = json.loads(stats_json)
+        if data['state'] == 'StateLeader':
+            if leader_flag == 0: #如果是第一次成为leader，需要启动jupyter
+                leader_flag = 1 
+                args = ['jupyter', 'notebook', '--NotebookApp.token=', '--ip=0.0.0.0', '--port=8888']
+                subprocess.Popen(args)
+                os.system('etcdctl set /leader/' + ip + ' ' + "1 --ttl 30")
+            elif data['state'] == 'StateFollower':
+                os.system('etcdctl set /follower/' + ip + ' ' + "1 --ttl 30")
+        update_host(n)
+        time.sleep(10)
+```
+
+### framework
+
+framework基本上仍然可以使用上一次作业的scheduler.py，不区分是否运行Jupiter notebook即可。
